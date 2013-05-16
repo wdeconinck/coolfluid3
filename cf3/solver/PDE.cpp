@@ -1,4 +1,4 @@
-// Copyright (C) 2010-2011 von Karman Institute for Fluid Dynamics, Belgium
+// Copyright (C) 2010-2013 von Karman Institute for Fluid Dynamics, Belgium
 //
 // This software is distributed under the terms of the
 // GNU Lesser General Public License version 3 (LGPLv3).
@@ -121,13 +121,13 @@ void PDE::create_fields()
   }
   if ( is_null(m_wave_speed) || ( &m_wave_speed->dict() != m_fields.get() ) )
   {
-    if ( Handle<Component> found = m_fields->get_child("rhs_ws") )
+    if ( Handle<Component> found = m_fields->get_child("wave_speed") )
     {
       m_wave_speed = found->handle<Field>();
     }
     else
     {
-      m_wave_speed = m_fields->create_field("rhs_ws",1u).handle<Field>();
+      m_wave_speed = m_fields->create_field("wave_speed",1u).handle<Field>();
       m_wave_speed->parallelize();
     }
     options().set("wave_speed",m_wave_speed);
