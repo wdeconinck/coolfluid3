@@ -168,6 +168,9 @@ void ComputeFieldGradient::execute()
                                                    cell_coords,
                                                    jacobian);
           // Compute gradient
+          
+          /// @WARNING n is used out of its scope !!!
+          
           grad_values.noalias() = n * jacobian.inverse() * gradient_matrix_per_point[grad_pt] * field_element_values;
 
           Uint p = grad_space.connectivity()[e][grad_pt];

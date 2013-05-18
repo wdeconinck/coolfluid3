@@ -174,6 +174,10 @@ list( APPEND coolfluid_qwt_files
 
 #source_group( Headers FILES ${coolfluid_qwt_files} )
 
+if( QT4_FOUND )
+    include( ${QT_USE_FILE} )
+endif()
+
 coolfluid3_add_library( TARGET    coolfluid_qwt
                         SOURCES   ${coolfluid_qwt_files}
                         MOC       ${coolfluid_qwt_moc_classes}
