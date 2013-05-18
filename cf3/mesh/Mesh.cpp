@@ -84,12 +84,6 @@ Mesh::Mesh ( const std::string& name  ) :
 
   m_local_bounding_box  = create_static_component<BoundingBox>("bounding_box_local");
   m_global_bounding_box = create_static_component<BoundingBox>("bounding_box_global");
-
-  regist_signal ( "write_mesh" )
-      .description( "Write mesh, guessing automatically the format" )
-      .pretty_name("Write Mesh" )
-      .connect   ( boost::bind ( &Mesh::signal_write_mesh,    this, _1 ) )
-      .signature ( boost::bind ( &Mesh::signature_write_mesh, this, _1 ) );
       
   regist_signal ( "raise_mesh_loaded" )
       .description( "Raise the mesh loaded event" )
@@ -114,6 +108,8 @@ Mesh::Mesh ( const std::string& name  ) :
   coord_field->add_tag(mesh::Tags::coordinates());
   coord_field->create_descriptor("coord[vector]");
   m_geometry_fields->m_fields.push_back(coord_field);
+
+  regist_generated_signals(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,45 +334,6 @@ Dictionary& Mesh::geometry_fields() const
 }
 
 //////////////////////////////////////////////////////////////////////////////
-
-void Mesh::signature_write_mesh ( SignalArgs& node)
-{
-  SignalOptions options( node );
-
-  options.add("file" , URI(name() + ".msh") )
-      .description("File to write" ).mark_basic();
-
-  std::vector<URI> fields;
-  options.add("fields" , fields )
-      .description("Field paths to write");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void Mesh::signal_write_mesh ( SignalArgs& node )
-{
-  SignalOptions options( node );
-
-  URI file(name()+".msh");
-
-  if (options.check("file"))
-    file = options.value<URI>("file");
-
-  // check protocol for file loading
-  // if( file.scheme() != URI::Scheme::FILE )
-  //   throw ProtocolError( FromHere(), "Wrong protocol to access the file, expecting a \'file\' but got \'" + file.string() + "\'" );
-
-  URI fpath( file );
-//  if( fpath.scheme() != URI::Scheme::FILE )
-//    throw ProtocolError( FromHere(), "Wrong protocol to access the file, expecting a \'file\' but got \'" + fpath.string() + "\'" );
-
-  std::vector<URI> fields;
-
-  if (options.check("fields"))
-    fields = options.value< std::vector<URI> >("fields");
-
-  write_mesh(fpath,fields);
-}
 
 void Mesh::signal_raise_mesh_loaded ( SignalArgs& node )
 {

@@ -42,6 +42,9 @@ public: // functions
   /// Virtual destructor
   virtual ~Mesh();
 
+  /// generates automatically some signals from C++ function signatures
+  void generate_signals();
+
   /// Get the class name
   static std::string type_name () { return "Mesh"; }
 
@@ -76,12 +79,14 @@ public: // functions
   /// @return metadata component
   const MeshMetadata& metadata() const { return *m_metadata; }
 
+  /// @signal
+  /// Write mesh, guessing automatically the format
+  /// @pretty_name Write Mesh
+  /// @param file  "description of parameter" @default=URI( name() + ".msh" )
+  /// @param fields "fields to output"
   void write_mesh( const common::URI& file, const std::vector<common::URI> fields = std::vector<common::URI>());
 
-  void signal_write_mesh ( common::SignalArgs& args );
   void signal_raise_mesh_loaded ( common::SignalArgs& node );
-
-  void signature_write_mesh ( common::SignalArgs& args);
 
   Uint dimension() const { return m_dimension; }
 

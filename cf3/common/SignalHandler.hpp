@@ -75,6 +75,9 @@ public:
   /// Unregist signal
   void unregist_signal ( const SignalID& sname );
 
+  template < typename T >
+  void regist_generated_signals( T* p ) { p->T::generate_signals(); }
+
 public: // data
 
   /// storage of the signals
