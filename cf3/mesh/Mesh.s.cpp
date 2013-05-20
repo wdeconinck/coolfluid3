@@ -11,44 +11,6 @@ using namespace cf3;
 using namespace cf3::common;
 using namespace cf3::common::XML;
 
-#include "cf3/mesh/Mesh2.hpp"
-
-using namespace cf3::mesh;
-
-static void signal_write_mesh ( cf3::mesh::Mesh2 * self, SignalArgs& node )
-{
-  SignalOptions options( node );
-
-  cf3::common::URI file = options.value< cf3::common::URI >("file");
-  std::vector<cf3::common::URI> fields = options.value< std::vector<cf3::common::URI> >("fields");
-  self->write_mesh(file,fields);
-}
-
-static void signature_write_mesh ( cf3::mesh::Mesh2 * self, SignalArgs& node )
-{
-  SignalOptions options( node );
-
-  cf3::common::URI file;
-  file = cf3::common::URI("mesh.msh");
-  options.add("file" , file ).description("File to write");
-
-  std::vector<cf3::common::URI> fields;
-  fields += cf3::common::URI("/to/path1"), cf3::common::URI("/to/path2");
-  options.add("fields" , fields ).description("Field paths to write");
-
-}
-
-void cf3::mesh::Mesh2::generate_signals()
-{
-
-    regist_signal("write_mesh")
-        .description("writes the mesh to file")
-        .pretty_name("Write Mesh")
-        .connect( boost::bind ( signal_write_mesh, this, _1 ) )
-        .signature( boost::bind ( signature_write_mesh, this, _1 ) );
-
-}
-
 #include "cf3/mesh/Mesh.hpp"
 
 using namespace cf3::mesh;
