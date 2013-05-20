@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import os
-import json
+import os, json, re, sys, getopt, StringIO, hashlib
+
+#------------------------------------------------------------------------------
 
 totypes = {
     "integer":"int",
@@ -21,8 +22,11 @@ totypes = {
     "array[uri]":"std::vector<cf3::common::URI>",
 }
 
+headers = [  'boost/assign.hpp', 'cf3/common/URI.hpp', 'cf3/common/Signal.hpp', 'cf3/common/XML/SignalOptions.hpp' ]
 
-file = "/Users/tlmq/dev/coolfluid3/cf3/mesh/Mesh.s.json"
+namespaces = [ 'std', 'boost::assign', 'cf3', 'cf3::common', 'cf3::common::XML' ]
+
+#------------------------------------------------------------------------------
 
 def quote_value(type,value):
     if type == "uri":
@@ -31,24 +35,45 @@ def quote_value(type,value):
         return '"' + value + '"'
     return value
 
+#------------------------------------------------------------------------------
+
 class GenerateSignals(object):
-    def __init__(self,cls):
-        self.cls = cls 
+    def __init__(self,cls,decl):
+        self.cls  = cls 
+        self.decl = decl 
     
-    def output_file(self,path):
-        return os.path.splitext(path)[0] + ".cpp"
+    def namespace(self):
+        ns = self.cls.split('::')
+        ns.pop()
+        return '::'.join(ns)
+
+    def header_file(self,type):
+        ns = type.split('::')
+        cl = ns.pop() 
+        # if ns[0] == 'cf3': # <-- to remove when our headers include "cf3/..."
+        #     ns.pop(0)
+        h = ''
+        for s in ns:
+            h += s + '/'
+        h += cl + ".hpp"
+        return h 
     
-    def gen(self):
+    def gen(self,out):
         
-        # open temporary file
-        out = open( self.output_file(file), 'w' )
-        
+        print 'generating signals for {clstype}'.format( clstype=self.cls )
+
+        out.write( '#include "{header}"\n'.format( header=self.header_file(self.cls) ) )
+        out.write("\n" )
+
+        out.write( 'using namespace {ns};\n'.format( ns=self.namespace() ) )
+        out.write("\n" )
+
         # loop signals
-        for sig in self.cls['signals']: 
+        for sig in self.decl['signals']:
 
             # generate the signal function
 
-            out.write( 'static void signal_{name} ( {type} * self, SignalArgs& node )\n'.format( name=sig['name'],type=cls['type'] ) )
+            out.write( 'static void signal_{name} ( {type} * self, SignalArgs& node )\n'.format( name=sig['name'],type=self.cls ) )
             out.write("{\n" )
             out.write("  SignalOptions options( node );\n" )
             out.write("\n" )
@@ -61,7 +86,7 @@ class GenerateSignals(object):
             
             # generate the signature function
             
-            out.write( 'static void signature_{name} ( {type} * self, SignalArgs& node )\n'.format( name=sig['name'],type=cls['type'] ) )
+            out.write( 'static void signature_{name} ( {type} * self, SignalArgs& node )\n'.format( name=sig['name'],type=self.cls ) )
             out.write("{\n" )
             out.write("  SignalOptions options( node );\n" )
             out.write("\n" )
@@ -84,39 +109,103 @@ class GenerateSignals(object):
 
         # generate the signals in the component
 
-        out.write( 'void {type}::generate_signals()\n'.format( type=self.cls['type'] ) )
+        out.write( 'void {type}::generate_signals()\n'.format( type=self.cls ) )
         out.write("{\n" )
         out.write("\n")
-        for sig in self.cls['signals']: 
+        for sig in self.decl['signals']: 
                 out.write( '    regist_signal("{name}")\n'.format( name=sig['name'] ) )
                 out.write( '        .description("{desc}")\n'.format( desc=sig.get('desc',"") ) )
                 out.write( '        .pretty_name("{pretty}")\n'.format( pretty=sig.get('pretty',"") ) )
                 out.write( '        .connect( boost::bind ( signal_{name}, this, _1 ) )\n'.format( name=sig['name'] ) )
                 out.write( '        .signature( boost::bind ( signature_{name}, this, _1 ) );\n'.format( name=sig['name'] ) )
                 out.write("\n")    
-        out.write("}\n" )
+        out.write("}\n\n" )
 
-# load json file with list of signals
-f = open( file, 'r' )
-decode = json.load(f)
+        return out
 
-if isinstance( decode, list) :
+#------------------------------------------------------------------------------
+
+def help():
+      print 'sgen.py [-h] [-n] [-d|--dump] -i <inputfile> [ -o <outputfile> ]'    
+
+#------------------------------------------------------------------------------
+
+def main(argv):
+
+    ifile=''
+    ofile=''
+    dump=False
+    dry_run=False
+
+    try:
+        opts, args = getopt.getopt(argv,"hndi:o:",["ifile=","ofile="])
+    except getopt.GetoptError:
+        help()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+          help()
+          sys.exit()
+        elif opt in ("-n"):
+          dry_run = True
+        elif opt in ("-d","--dump"):
+          dump = True
+        elif opt in ("-i","--ifile"):
+          ifile = arg
+        elif opt in ("-o","--ofile"):
+          ofile = arg
+
+    if ifile == '':
+        print 'input file missing'
+        help()
+        sys.exit(2)
+
+    if ofile == '':
+        ofile = os.path.splitext(ifile)[0] + ".cpp"
+
+    # print '{ifile} -> {ofile}'.format( ifile=ifile, ofile=ofile )
+
+    # load json file with list of signals
+    f = open( ifile, 'r' )
+    decode = json.load(f)
+
+    out = StringIO.StringIO()
+    
+    out.write("/* THIS FILE IS AUTO GENERATED by sgen.py -- DO NOT EDIT */\n\n" )
+    
+    # add includes
+    for h in headers:
+        out.write( '#include "{hd}"\n'.format( hd=h ) )
+    out.write("\n" )
+    for n in namespaces:
+        out.write( 'using namespace {nspace};\n'.format( nspace=n ) )
+    out.write("\n" )
+    
     for cls in decode:
-        # print cls
-        g = GenerateSignals(cls)
-        g.gen()
-else:
-        g = GenerateSignals(decode)
-        g.gen()
-        
+        g = GenerateSignals(cls,decode.get(cls))
+        g.gen(out)
 
-# void cf3::mesh::Mesh::generate_signals()
-# {
-#     regist_signal ( "write_mesh" )
-#         .description( "Write mesh, guessing automatically the format" )
-#         .pretty_name("Write Mesh" )
-#         .connect   ( boost::bind ( signal_write_mesh, this, _1 ) )
-#         .signature ( boost::bind ( signature_write_mesh, this, _1 ) );
-# }
-# 
-        
+    if dump:
+        print out.getvalue()
+
+    # only overwrite if generated newer code
+    
+    do_write = False
+    if os.path.exists( ofile ):
+        newsha1 = hashlib.sha1( out.getvalue() ).hexdigest()
+        of = open( ofile, 'r')
+        oldsha1 = hashlib.sha1( of.read() ).hexdigest()
+        of.close()
+        if newsha1 != oldsha1:
+            do_write = True
+    else:
+        do_write = True
+
+    if do_write and not dry_run:
+        print 'writing to {fn}'.format( fn=ofile )
+        of = open( ofile, 'w')
+        of.write( out.getvalue() )
+        of.close()
+ 
+if __name__ == "__main__":
+   main(sys.argv[1:])
