@@ -1,21 +1,27 @@
-[
-  { 	
-  "type"   : "cf3::mesh::Mesh",
-  "signals": [ 
-    	{ "name"   : "write_mesh",
-		  "desc"   : "writes the mesh to file",
-		  "pretty" : "Write Mesh",
-          "args"   : [ 
-  		   { "name" : "file",
-  			 "type" : "uri",
-               "value": "mesh.msh",
-               "desc" : "File to write" },
-  		   { "name" : "fields",
-               "type" : "array[uri]",
-               "value": [ "/to/path1" , "/to/path2" ],
-               "desc" : "Field paths to write" }
-  		 ]
-  	 }
- 	]
-  }
-]
+{
+    "cf3::mesh::Mesh" : { 	
+  	  "signals" : [ 
+      	{ "name"   : "write_mesh",
+  		  "desc"   : "writes the mesh to file",
+  		  "pretty" : "Write Mesh",
+            "args"   : [ 
+  			  { "name" : "file", "type" : "uri", "value": "mesh.msh", "desc" : "File to write" },
+    		  { "name" : "fields", "type" : "array[uri]", "value": [ "/to/path1" , "/to/path2" ], "desc" : "Field paths to write" }
+    		  ]
+    	 	}
+   	  ]
+    },
+	
+    "cf3::mesh::Mesh2" : { 	
+  	  "signals" : [ 
+      	{ "name"   : "write_mesh",
+  		  "desc"   : "writes the mesh to file",
+  		  "pretty" : "Write Mesh",
+            "args"   : [ 
+  			  { "name" : "file", "type" : "uri", "value": "mesh.msh", "desc" : "File to write" },
+    		  { "name" : "fields", "type" : "array[uri]", "value": [ "/to/path1" , "/to/path2" ], "desc" : "Field paths to write" }
+    		  ]
+    	 	}
+   	  ]
+    }
+}

@@ -6,8 +6,7 @@ list( APPEND coolfluid_cgal_files
 )
 
 list( APPEND coolfluid_cgal_includedirs ${CGAL_INCLUDE_DIR} )
-list( APPEND coolfluid_cgal_libs        ${CGAL_LIBRARY} ${Boost_THREAD_LIBRARY} )
-list( APPEND coolfluid_cgal_cflibs      coolfluid_mesh_lagrangep1 )
+list( APPEND coolfluid_cgal_libs        coolfluid_mesh_lagrangep1 ${CGAL_LIBRARY} ${Boost_THREAD_LIBRARY} )
 
 if(GMP_FOUND)
   list( APPEND coolfluid_cgal_includedirs ${GMP_INCLUDE_DIR} )
@@ -19,9 +18,11 @@ if(MPFR_FOUND)
   list( APPEND coolfluid_cgal_libs        ${MPFR_LIBRARIES})
 endif()
 
-set( coolfluid_cgal_condition  ${CF3_HAVE_CGAL} )
-
-coolfluid_add_library( coolfluid_cgal )
+coolfluid3_add_library( TARGET    coolfluid_cgal 
+					    SOURCES   ${coolfluid_cgal_files}
+						INCLUDES  ${coolfluid_cgal_includedirs}
+					    LIBS      ${coolfluid_cgal_libs}
+					    CONDITION CF3_HAVE_CGAL )
 
 if( coolfluid_cgal_COMPILE_FLAGS )
   set_source_files_properties(ImplicitFunctionMesh.cpp PROPERTIES COMPILE_FLAGS ${coolfluid_cgal_COMPILE_FLAGS})
