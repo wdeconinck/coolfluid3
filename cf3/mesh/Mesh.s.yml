@@ -1,0 +1,10 @@
+class : cf3::mesh::Mesh
+  - signal : write_mesh
+    args :
+      - name : file
+        type : uri
+        value: mesh.msh
+        desc : "File to write"
+      - name : fields
+        type : array[uri]
+        desc : "Field paths to write"

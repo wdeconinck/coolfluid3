@@ -2,6 +2,22 @@
 # macro for adding a library
 ##############################################################################
 
+### HOW TO DO AUTO SIGNALS
+
+# 1) loop over the list of sources
+# 2) check which contain @SIGNAL ( or also generate_signal )
+
+
+# 3) for those, add a rule to generate the class_signals.cpp
+#   a) fail is regist_auto_signals doesn't exist in the class.hpp/cpp (constructor) file
+# 4) make the rule depend on the class.hpp file (also on the generator script)
+# 4) add class_signals.cpp to list of sources
+
+# for singls written by hand
+# the output of the signal can contian many values
+# these should respect order of insertion to help python with
+# ( out1, out2 ) = mesh.lolo()
+
 macro( coolfluid3_add_library )
 
     set( options TEST KERNEL PYTHON_MODULE )
