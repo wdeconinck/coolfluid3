@@ -5,7 +5,8 @@ list( APPEND tools_files
      test-mpi-scalability.py
      cmake-win32.bat
      port-to-k3.pl
-	 sgen.py
+     siggen.py
+     sigparse.py
    )
 
 add_custom_target( tools SOURCES ${tools_files} )
