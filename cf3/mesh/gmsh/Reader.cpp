@@ -22,6 +22,8 @@
 
 #include "common/PE/debug.hpp"
 
+#include "math/Consts.hpp"
+
 #include "mesh/Region.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Dictionary.hpp"
@@ -707,7 +709,7 @@ void Reader::read_element_node_data()
       }
 
       mesh::Field& field = dict->create_field(field_name,gmsh_field.description());
-
+      field = math::Consts::real_nan();
       for (Uint var=0; var<field.nb_vars(); ++var)
       {
 
@@ -801,6 +803,7 @@ void Reader::read_element_data()
       std::vector<std::string> var_types_str;
 
       mesh::Field& field = dict.create_field(gmsh_field.name,gmsh_field.description());
+      field = math::Consts::real_nan();
 
       for (Uint i=0; i<field.nb_vars(); ++i)
       {
@@ -873,6 +876,7 @@ void Reader::read_node_data()
   {
 
     mesh::Field& field = m_mesh->geometry_fields().create_field(gmsh_field.name,gmsh_field.description());
+    field = math::Consts::real_nan();
 
     for (Uint i=0; i<field.nb_vars(); ++i)
     {
