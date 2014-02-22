@@ -626,6 +626,7 @@ void BuildFaces::match_boundary(Region& bdry_region, Region& inner_region)
       bdry_face_to_cell->options().set("face_building_algorithm",true);
 
       bdry_faces.connectivity_face2cell() = bdry_face_to_cell;
+      bdry_faces.add_tag( mesh::Tags::bdry_faces() );
     }
 
     ElementConnectivity& bdry_face_connectivity = bdry_face_to_cell->connectivity();
