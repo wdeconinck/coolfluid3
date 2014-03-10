@@ -152,7 +152,7 @@ void Writer::write()
 
 void Writer::write_header(std::fstream& file)
 {
-  std::string version = "2";
+  std::string version = "2.2";
   Uint file_type = 0; // ASCII
   Uint data_size = 8; // double precision
 
@@ -266,7 +266,7 @@ void Writer::write_connectivity(std::fstream& file)
   std::string group_name("");
   Uint group_number;
   Uint elm_type;
-  Uint number_of_tags=3; // 1 for physical entity,  1 for elementary geometrical entity,  1 for mesh partition
+  Uint number_of_tags=4; // 1 for physical entity,  1 for elementary geometrical entity,  1 belonging partitions, 1 for actual partition
   Uint partition_number = PE::Comm::instance().rank();
 
   Uint elementary_entity_index=1;
@@ -277,16 +277,36 @@ void Writer::write_connectivity(std::fstream& file)
     elm_type = m_elementTypes[elements->element_type().derived_type_name()];
     const Connectivity& element_connectivity = elements->geometry_space().connectivity();
     const Uint nb_elem = elements->size();
+    const Uint nb_nodes_per_elem = element_connectivity.row_size();
+    std::set<Uint> other_partitions;
+    std::vector<Uint> nodes(nb_nodes_per_elem);
+    Uint node_rank;
     bool ghost;
     for (Uint e=0; e<nb_elem; ++e)
     {
       ghost = elements->is_ghost(e);
       if( m_enable_overlap || !ghost )
       {
-        file << elements->glb_idx()[e]+1 << " " << elm_type << " " << number_of_tags << " " << group_number << " " << elementary_entity_index << " " << (ghost? -1 : partition_number);
+        nodes.clear();
+        other_partitions.clear();
         boost_foreach(const Uint node_idx, element_connectivity[e])
         {
-          file << " " << elements->geometry_fields().glb_idx()[node_idx]+1;
+          nodes.push_back( elements->geometry_fields().glb_idx()[node_idx]+1 );
+          node_rank = elements->geometry_fields().rank()[node_idx];
+          if( node_rank != partition_number)
+            other_partitions.insert( node_rank );
+        }
+
+        number_of_tags = 4 + other_partitions.size();
+        file << elements->glb_idx()[e]+1 << " " << elm_type << " " << number_of_tags << " " << group_number << " " << elementary_entity_index;
+        file << " " << other_partitions.size()+1 << " " << partition_number+1;
+        boost_foreach(const int part, other_partitions)
+        {
+          file << " " << -(part+1);
+        }
+        boost_foreach(const Uint node, nodes)
+        {
+          file << " " << node;
         }
         file << "\n";
       }
@@ -490,8 +510,8 @@ void Writer::write_elem_nodal_data(std::fstream& file)
         file << "\"" << field_name << "\"\n";
         // add 1 real tag: time
         file << 1 << "\n" << field_time << "\n";  // 1 real tag: time
-        // add 3 integer tags: time_step, variable_type, nb elements
-        file << 3 << "\n" << field_iter << "\n" << datasize << "\n" << nb_elements <<"\n";
+        // add 4 integer tags: time_step, variable_type, nb elements, 4 partition
+        file << 4 << "\n" << field_iter << "\n" << datasize << "\n" << nb_elements <<"\n" << PE::Comm::instance().rank()+1 << "\n";
 
         boost_foreach(const Handle<Entities const>& elements_handle, m_filtered_entities )
         {
@@ -659,7 +679,7 @@ void Writer::write_nodal_data(std::fstream& file)
         // add 1 real tag: time
         file << 1 << "\n" << field_time << "\n";  // 1 real tag: time
         // add 3 integer tags: time_step, variable_type, nb elements
-        file << 3 << "\n" << field_iter << "\n" << datasize << "\n" << used_nodes.size() <<"\n";
+        file << 4 << "\n" << field_iter << "\n" << datasize << "\n" << nb_elements <<"\n" << PE::Comm::instance().rank()+1 << "\n";
 
         boost_foreach (const Handle<Entities const>& elements_handle, filtered_used_entities_by_field)
         {
