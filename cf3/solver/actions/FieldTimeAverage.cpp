@@ -40,15 +40,21 @@ FieldTimeAverage::FieldTimeAverage ( const std::string& name ) :
 {
   options().add("field", m_source_field)
     .pretty_name("Field")
-    .description("The field to average")
+    .description("[in] The field to average")
     .attach_trigger(boost::bind(&FieldTimeAverage::trigger_field, this))
     .link_to(&m_source_field)
     .mark_basic();
 
   options().add("count", m_count)
     .pretty_name("count")
-    .description("Numer of samples that were averaged so far")
-    .link_to(&m_count);
+    .description("[in/out] Numer of samples that were averaged so far")
+    .link_to(&m_count)
+    .mark_basic();
+
+  options().add("average_field", m_statistics_field)
+    .pretty_name("Averaged Field")
+    .description("[out] The averaged field")
+    .mark_basic();
 }
 
 void FieldTimeAverage::execute()
@@ -82,6 +88,7 @@ void FieldTimeAverage::trigger_field()
   {
     m_statistics_field = dict.create_field(new_field_name, m_source_field->descriptor().description()).handle<mesh::Field>();
     m_statistics_field->descriptor().prefix_variable_names("avg_");
+    options().set("average_field",m_statistics_field);
   }
 }
 
