@@ -215,6 +215,10 @@ void Reader::read_elements(const common::XML::XmlNode& topology_node, Region& to
     {
       Entities& elems = *region.access_component(elements_node.attribute_value("name"))->handle<Entities>();
 
+      common::XML::XmlNode tag_node = elements_node.content->first_node("tag");
+      for(; tag_node.is_valid(); tag_node.content = tag_node.content->next_sibling("tag"))
+        elems.add_tag(tag_node.attribute_value("name"));
+
       // Read glb_idx
       data_reader->read_list(elems.glb_idx(), common::from_str<Uint>(elements_node.attribute_value("global_indices")));
 

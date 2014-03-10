@@ -750,7 +750,7 @@ void BuildFaces::match_boundary(Region& bdry_region, Region& inner_region)
 
 void BuildFaces::build_cell_face_connectivity(Component& parent)
 {
-
+  CFdebug << "Build face cell connectivity for " << parent.uri() << CFendl;
   boost_foreach(Cells& elements, find_components_recursively<Cells>(parent))
   {
     ElementConnectivity& c2f = *elements.create_component<ElementConnectivity>("face_connectivity");
@@ -763,6 +763,8 @@ void BuildFaces::build_cell_face_connectivity(Component& parent)
 
   boost_foreach(Entities& face_elements, find_components_recursively_with_tag<Entities>(parent,mesh::Tags::face_entity()) )
   {
+    CFdebug << "   - face_elements " << face_elements.uri() << CFendl;
+
     FaceCellConnectivity& f2c = *face_elements.get_child_checked("cell_connectivity")->handle<FaceCellConnectivity>();
     const ElementConnectivity& connectivity = f2c.connectivity();
     const common::List<bool>&  is_bdry      = f2c.is_bdry_face();

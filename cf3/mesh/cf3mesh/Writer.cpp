@@ -64,6 +64,10 @@ namespace detail
         elements_node.set_attribute("element_type", elements.element_type().derived_type_name());
         elements_node.set_attribute("global_indices", common::to_str(writer.append_data(elements.glb_idx())));
         elements_node.set_attribute("ranks", common::to_str(writer.append_data(elements.rank())));
+        BOOST_FOREACH(const std::string& tag, elements.get_tags())
+        {
+          elements_node.add_node("tag").set_attribute("name", tag);
+        }
 
         if( is_not_null(elements.connectivity_cell2face()) )
         {
